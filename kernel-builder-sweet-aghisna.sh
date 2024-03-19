@@ -56,7 +56,7 @@ export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
 # KernelSU support
-KSU=0
+KSU=1
 if [ "$KSU" == "1" ]; then
 	echo "Enabling KernelSU support..."
 	rm -rf KernelSU &>> $REALLOGGER
@@ -67,7 +67,7 @@ if [ "$KSU" == "1" ]; then
 	cd drivers
 	ln -sf ../KernelSU/kernel kernelsu &>> $REALLOGGER
 	cd ..
-	sed -i '/source "drivers\/security\/samsung\/icdrv\/Kconfig"/a source "drivers\/kernelsu\/Kconfig"' drivers/Kconfig
+	sed -i '/endmenu/i source "drivers/kernelsu/Kconfig"' drivers/Kconfig
 	sed -i 's/# CONFIG_KSU is not set/CONFIG_KSU=y/g' arch/arm64/configs/$DEFCONFIG
 else
 	echo "KernelSU support is disabled, skipping..."
@@ -138,12 +138,12 @@ if [ "$ANYKRANUL" == "1" ]; then
 	if [ "$KSU" == "1" ]; then
 		cd AnyKernel3
 		zip -r -9 aghisnarx-ksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
-		echo "Build is located at: AnyKernel3/riaru-ksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
+		echo "Build is located at: AnyKernel3/aghisnarx-ksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
 		cd ..
 	else
 		cd AnyKernel3
 		zip -r -9 aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
-		echo "Build is located at: AnyKernel3/riaru-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
+		echo "Build is located at: AnyKernel3/aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
 		cd ..
 	fi
 else
