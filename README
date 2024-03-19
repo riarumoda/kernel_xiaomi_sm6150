@@ -1,2 +1,2 @@
 # INFORMATION
-for builders or devs who want to build with this kernel you have to disable ln8000 support in menuconfig
+for builders or devs who want to build this kernel, you have to check out the buildscript to turn on/off some stuff.
