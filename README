@@ -1,0 +1,2 @@
+# INFORMATION
+for builders or devs who want to build with this kernel you have to disable ln8000 support in menuconfig
