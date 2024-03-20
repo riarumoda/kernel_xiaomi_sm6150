@@ -159,7 +159,7 @@ if [ "$ANYKRANUL" == "1" ]; then
 		rm -rf dtbo.img
 		cp ../blobs/miui-dtbo.img dtbo.img
 		zip -r -9 aghisnarx-noksu-miui-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
-		echo "Build is located at: AnyKernel3/aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip, AnyKernel3/aghisnarx-noksu-miui-$DATESTAPLE-$DEFCONFIG.zip"
+		echo "Build is located at: AnyKernel3/aghisnarx-noksu-aosp-$DATESTAPLE-$DEFCONFIG.zip, AnyKernel3/aghisnarx-noksu-miui-$DATESTAPLE-$DEFCONFIG.zip"
 		cd ..
 	fi
 else
