@@ -24,6 +24,7 @@ fi
 
 # DEFCONFIG
 DEFCONFIG=sweet_defconfig
+VENDEFCONFIG=sweet_user_defconfig
 
 # Playground clang
 NOTHAVECLANG=1
@@ -68,7 +69,7 @@ if [ "$KSU" == "1" ]; then
 	ln -sf ../KernelSU/kernel kernelsu &>> $REALLOGGER
 	cd ..
 	sed -i '/endmenu/i source "drivers/kernelsu/Kconfig"' drivers/Kconfig
-	sed -i 's/# CONFIG_KSU is not set/CONFIG_KSU=y/g' arch/arm64/configs/$DEFCONFIG
+	sed -i 's/# CONFIG_KSU is not set/CONFIG_KSU=y/g' arch/arm64/configs/vendor/$VENDEFCONFIG
 else
 	echo "KernelSU support is disabled, skipping..."
 	rm -rf KernelSU &>> $REALLOGGER
@@ -76,17 +77,17 @@ else
 	rm -rf kernelsu &>> $REALLOGGER
 	cd ..
 	sed -i '/source "drivers\/kernelsu\/Kconfig"/d' drivers/Kconfig
-	sed -i 's/CONFIG_KSU=y/# CONFIG_KSU is not set/g' arch/arm64/configs/$DEFCONFIG
+	sed -i 's/CONFIG_KSU=y/# CONFIG_KSU is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
 fi
 
 # LN8000 Toggles
 LN8K=1
 if [ "$LN8K" == "1" ]; then
 	echo "Enabling LN8000 support..."
-	sed -i 's/# CONFIG_CHARGER_LN8000 is not set/CONFIG_CHARGER_LN8000=y/g' arch/arm64/configs/$DEFCONFIG
+	sed -i 's/# CONFIG_CHARGER_LN8000 is not set/CONFIG_CHARGER_LN8000=y/g' arch/arm64/configs/vendor/$VENDEFCONFIG
 else
 	echo "Disabling LN8000 support..."
-	sed -i 's/CONFIG_CHARGER_LN8000=y/# CONFIG_CHARGER_LN8000 is not set/g' arch/arm64/configs/$DEFCONFIG
+	sed -i 's/CONFIG_CHARGER_LN8000=y/# CONFIG_CHARGER_LN8000 is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
 fi
 
 # Cleanup

@@ -54,6 +54,9 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 
 #ifdef __KERNEL__
 
+/* Attributes */
+#include <linux/compiler_attributes.h>
+
 #ifdef __GNUC__
 #include <linux/compiler-gcc.h>
 #endif
