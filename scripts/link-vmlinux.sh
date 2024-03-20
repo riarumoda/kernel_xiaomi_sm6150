@@ -173,7 +173,7 @@ vmlinux_link()
 				${1}"
 		fi
 
-		${ld} ${ldflags} -o ${2} -T ${lds} ${objects}
+		${ld} ${ldflags} --threads 16 -o ${2} -T ${lds} ${objects}
 	else
 		if [ -n "${CONFIG_THIN_ARCHIVES}" ]; then
 			objects="-Wl,--whole-archive			\
