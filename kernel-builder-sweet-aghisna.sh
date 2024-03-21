@@ -90,6 +90,20 @@ else
 	sed -i 's/CONFIG_CHARGER_LN8000=y/# CONFIG_CHARGER_LN8000 is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
 fi
 
+# LTO Toggles
+LTO=0
+if [ "$LTO" == "1" ]; then
+	echo "Enabling LTO support... (Requires min. 32GB of RAM)"
+	sed -i 's/# CONFIG_LTO is not set/CONFIG_LTO=y/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+	sed -i 's/# CONFIG_LTO_CLANG is not set/CONFIG_LTO_CLANG=y/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+	sed -i 's/CONFIG_LTO_NONE=y/# CONFIG_LTO_NONE is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+else
+	echo "Disabling LTO support..."
+	sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+	sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+	sed -i 's/# CONFIG_LTO_NONE is not set/CONFIG_LTO_NONE=y/g' arch/arm64/configs/vendor/$VENDEFCONFIG
+fi
+
 # Cleanup
 echo "Cleaning up out directory..."
 rm -rf out
@@ -106,7 +120,6 @@ make -j16 O=out &>> $REALLOGGER
 # Pack it up
 ANYKRANUL=1
 DATESTAPLE=`date +%Y%m%d-%H%M`
-OSVAR="MIUI"
 if [ "$ANYKRANUL" == "1" ]; then
 	echo "Packing up with AnyKernel3..."
 	rm -rf AnyKernel3
@@ -118,11 +131,7 @@ if [ "$ANYKRANUL" == "1" ]; then
 	rm -rf AnyKernel3/README.md
 	cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
 	cp out/arch/arm64/boot/dtb.img AnyKernel3/dtb.img
-	if [ "$OSVAR" == "MIUI" ]; then
-		cp blobs/miui-dtbo.img AnyKernel3/dtbo.img
-	else
-		cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
-	fi
+	cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
 	sed -i 's/^kernel.string=.*/kernel.string=/' AnyKernel3/anykernel.sh
 	sed -i '/^device.name3=.*/d' AnyKernel3/anykernel.sh
 	sed -i '/^device.name4=.*/d' AnyKernel3/anykernel.sh
@@ -138,13 +147,19 @@ if [ "$ANYKRANUL" == "1" ]; then
 	sed -i 's/^patch_fstab.*/\# &/' AnyKernel3/anykernel.sh
 	if [ "$KSU" == "1" ]; then
 		cd AnyKernel3
-		zip -r -9 aghisnarx-ksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
-		echo "Build is located at: AnyKernel3/aghisnarx-ksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
+		zip -r -9 aghisnarx-ksu-aosp-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
+		rm -rf dtbo.img
+		cp ../blobs/miui-dtbo.img dtbo.img
+		zip -r -9 aghisnarx-ksu-miui-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
+		echo "Build is located at: AnyKernel3/aghisnarx-ksu-aosp-$DATESTAPLE-$DEFCONFIG.zip, AnyKernel3/aghisnarx-ksu-miui-$DATESTAPLE-$DEFCONFIG.zip"
 		cd ..
 	else
 		cd AnyKernel3
-		zip -r -9 aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
-		echo "Build is located at: AnyKernel3/aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip"
+		zip -r -9 aghisnarx-noksu-aosp-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
+		rm -rf dtbo.img
+		cp ../blobs/miui-dtbo.img dtbo.img
+		zip -r -9 aghisnarx-noksu-miui-$DATESTAPLE-$DEFCONFIG.zip META-INF tools anykernel.sh Image.gz-dtb dtb.img dtbo.img &>> $REALLOGGER
+		echo "Build is located at: AnyKernel3/aghisnarx-noksu-$OSVAR-$DATESTAPLE-$DEFCONFIG.zip, AnyKernel3/aghisnarx-noksu-miui-$DATESTAPLE-$DEFCONFIG.zip"
 		cd ..
 	fi
 else
