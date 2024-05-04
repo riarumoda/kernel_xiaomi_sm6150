@@ -1,4 +1,4 @@
-/*
+f/*
  *  linux/fs/open.c
  *
  *  Copyright (C) 1991, 1992  Linus Torvalds
@@ -354,9 +354,10 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
 	return error;
 }
 
-// KernelSU hook
+#ifdef CONFIG_KSU
 extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
-			        int *flags);
+				int *flags);
+#endif
 
 /*
  * access() needs to use the real uid/gid, not the effective uid/gid.
@@ -373,7 +374,10 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 	int res;
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
 
-	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);  // call KSU hook first
+	#ifdef CONFIG_KSU
+	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
+	#endif
+
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
 
