@@ -34,6 +34,10 @@
 
 #include "internal.h"
 
+#if defined(CONFIG_SUSFS)
+#include <linux/suspicious.h>
+#endif
+
 int do_truncate2(struct vfsmount *mnt, struct dentry *dentry, loff_t length,
 		unsigned int time_attrs, struct file *filp)
 {
@@ -143,6 +147,19 @@ static long do_sys_truncate(const char __user *pathname, loff_t length)
 
 	if (length < 0)	/* sorry, but loff_t says... */
 		return -EINVAL;
+
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(pathname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 
 retry:
 	error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
@@ -378,6 +395,19 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
 	#endif
 
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(filename);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
+
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
 
@@ -475,6 +505,19 @@ SYSCALL_DEFINE1(chdir, const char __user *, filename)
 	struct path path;
 	int error;
 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_DIRECTORY;
+
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(filename);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	error = user_path_at(AT_FDCWD, filename, lookup_flags, &path);
 	if (error)

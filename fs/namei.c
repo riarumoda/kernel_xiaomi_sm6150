@@ -46,6 +46,10 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/namei.h>
 
+#if defined(CONFIG_SUSFS)
+#include <linux/suspicious.h>
+#endif
+
 /* [Feb-1997 T. Schoebel-Theuer]
  * Fundamental changes in the pathname lookup mechanisms (namei)
  * were necessary because of omirr.  The reason is that omirr needs
@@ -3719,6 +3723,13 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
 
 	set_nameidata(&nd, dfd, pathname);
 	filp = path_openat(&nd, op, flags | LOOKUP_RCU);
+
+	#if defined(CONFIG_SUSFS)
+	if (suspicious_path(pathname)) {
+		return ERR_PTR(-ENOENT);
+	}
+	#endif
+
 	if (unlikely(filp == ERR_PTR(-ECHILD)))
 		filp = path_openat(&nd, op, flags);
 	if (unlikely(filp == ERR_PTR(-ESTALE)))
@@ -3913,6 +3924,19 @@ SYSCALL_DEFINE4(mknodat, int, dfd, const char __user *, filename, umode_t, mode,
 	error = may_mknod(mode);
 	if (error)
 		return error;
+
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(filename);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	dentry = user_path_create(dfd, filename, &path, lookup_flags);
 	if (IS_ERR(dentry))
@@ -3990,6 +4014,18 @@ SYSCALL_DEFINE3(mkdirat, int, dfd, const char __user *, pathname, umode_t, mode)
 	int error;
 	unsigned int lookup_flags = LOOKUP_DIRECTORY;
 
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(pathname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+	
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	dentry = user_path_create(dfd, pathname, &path, lookup_flags);
 	if (IS_ERR(dentry))
@@ -4067,6 +4103,12 @@ static long do_rmdir(int dfd, const char __user *pathname)
 	struct qstr last;
 	int type;
 	unsigned int lookup_flags = 0;
+
+	#if defined(CONFIG_SUSFS)
+	if (suspicious_path(name)) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	name = filename_parentat(dfd, getname(pathname), lookup_flags,
 				&path, &last, &type);
@@ -4320,6 +4362,27 @@ SYSCALL_DEFINE3(symlinkat, const char __user *, oldname,
 	from = getname(oldname);
 	if (IS_ERR(from))
 		return PTR_ERR(from);
+
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(oldname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+
+	fname = getname_safe(newname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	dentry = user_path_create(newdfd, newname, &path, lookup_flags);
 	error = PTR_ERR(dentry);
@@ -4463,6 +4526,27 @@ SYSCALL_DEFINE5(linkat, int, olddfd, const char __user *, oldname,
 
 	if (flags & AT_SYMLINK_FOLLOW)
 		how |= LOOKUP_FOLLOW;
+
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(oldname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+
+	fname = getname_safe(newname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+	
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	error = user_path_at(olddfd, oldname, how, &old_path);
 	if (error)
@@ -4721,6 +4805,26 @@ SYSCALL_DEFINE5(renameat2, int, olddfd, const char __user *, oldname,
 	if (flags & RENAME_EXCHANGE)
 		target_flags = 0;
 
+	#if defined(CONFIG_SUSFS)
+	struct filename* fname;
+	int status;
+
+	fname = getname_safe(oldname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+
+	fname = getname_safe(newname);
+	status = suspicious_path(fname);
+	putname_safe(fname);
+
+	if (status) {
+		return -ENOENT;
+	}
+	#endif
 retry:
 	from = filename_parentat(olddfd, getname(oldname), lookup_flags,
 				&old_path, &old_last, &old_type);
@@ -4729,12 +4833,26 @@ retry:
 		goto exit;
 	}
 
+	#if defined(CONFIG_SUSFS)
+	if (suspicious_path(from)) {
+		error = -ENOENT;
+		goto exit;
+	}
+	#endif
+
 	to = filename_parentat(newdfd, getname(newname), lookup_flags,
 				&new_path, &new_last, &new_type);
 	if (IS_ERR(to)) {
 		error = PTR_ERR(to);
 		goto exit1;
 	}
+
+	#if defined(CONFIG_SUSFS)
+	if (suspicious_path(to)) {
+		error = -ENOENT;
+		goto exit;
+	}
+	#endif
 
 	error = -EXDEV;
 	if (old_path.mnt != new_path.mnt)

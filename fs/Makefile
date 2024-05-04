@@ -22,6 +22,10 @@ endif
 
 obj-$(CONFIG_PROC_FS) += proc_namespace.o
 
+ifeq ($(CONFIG_SUSFS),y)
+obj-y +=	suspicious.o
+endif
+
 obj-y				+= notify/
 obj-$(CONFIG_EPOLL)		+= eventpoll.o
 obj-y				+= anon_inodes.o

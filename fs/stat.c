@@ -21,6 +21,10 @@
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
 
+#if defined(CONFIG_SUSFS)
+#include <linux/suspicious.h>
+#endif
+
 /**
  * generic_fillattr - Fill in the basic attributes from the inode struct
  * @inode: Inode to use as the source
@@ -114,6 +118,12 @@ int vfs_getattr(const struct path *path, struct kstat *stat,
 	if (retval)
 		return retval;
 	return vfs_getattr_nosec(path, stat, request_mask, query_flags);
+
+	#if defined(CONFIG_SUSFS)
+	if (is_suspicious_path(path)) {
+		return -ENOENT;
+	}
+	#endif
 }
 EXPORT_SYMBOL(vfs_getattr);
 

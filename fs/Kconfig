@@ -327,3 +327,8 @@ config BLOCK_UNWANTED_FILES
 	bool "Allow blocking files from executing from kernel"
 	help
 	  This option allows you to make files from certain folders un-openable.
+
+config SUSFS
+	bool "Prevent apps from discovering Zygisk and similar through proc calls"
+	help
+	  This will help you hide your apps better. might gonna cause some issues with some systems.
